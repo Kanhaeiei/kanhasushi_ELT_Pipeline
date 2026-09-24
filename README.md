@@ -4,7 +4,7 @@ Production-ready **ELT Data Pipeline** and **Analytical Star Schema** designed f
 
 ---
 
-## 🏛 Architecture Overview
+## Architecture Overview
 
 ```
 [OLTP: Supabase PostgreSQL]
@@ -32,7 +32,7 @@ Production-ready **ELT Data Pipeline** and **Analytical Star Schema** designed f
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 kanhasushi-elt/
@@ -62,7 +62,7 @@ kanhasushi-elt/
 
 ---
 
-## 🚀 Quick Start with Docker Compose
+## Quick Start with Docker Compose
 
 ### 1. Configure Environment Variables
 Copy `.env.example` to `.env` and fill in your Supabase credentials:
@@ -83,7 +83,7 @@ docker compose up -d
 
 ---
 
-## ⏰ Business Day Cutoff Logic
+## Business Day Cutoff Logic
 
 Because KanhaSushi operates late into the night (14:00 – 02:00 / 04:00 AM), a standard calendar date would incorrectly split a single night's shift across two days.
 
@@ -92,7 +92,7 @@ This pipeline applies a **10:00 AM Bangkok Time (UTC+7)** cutoff:
 * Orders placed between `00:00` and `09:59` on Saturday morning belong to **Friday's shift**.
 * Shift rollover occurs cleanly at **10:00 AM**.
 
-
+## Some Photo about my project
 <img width="1850" height="978" alt="image" src="https://github.com/user-attachments/assets/d4b83b53-b302-4871-acba-843a51a4b6fd" />
 <img width="1844" height="969" alt="image" src="https://github.com/user-attachments/assets/1c404172-5afc-40f5-b1d6-3282b326e825" />
 
