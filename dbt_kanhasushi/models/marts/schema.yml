@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: fact_order_items
+    description: "Primary sales fact table at the grain of 1 ordered item."
+    columns:
+      - name: order_item_id
+        tests:
+          - unique
+          - not_null
+      - name: order_id
+        tests:
+          - not_null
+      - name: quantity
+        tests:
+          - not_null
+      - name: unit_price
+        tests:
+          - not_null
+
+  - name: fact_payments
+    description: "Financial transactions and table settlements."
+    columns:
+      - name: payment_id
+        tests:
+          - unique
+          - not_null
+      - name: total_amount
+        tests:
+          - not_null
+
+  - name: dim_menu_item
+    description: "Food and drink items dimension."
+    columns:
+      - name: variant_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_table
+    description: "Restaurant tables dimension."
+    columns:
+      - name: table_id
+        tests:
+          - unique
+          - not_null

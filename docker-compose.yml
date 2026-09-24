@@ -1,0 +1,102 @@
+version: '3.8'
+
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.9.2-python3.11
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${WAREHOUSE_USER:-kanha_admin}:${WAREHOUSE_PASSWORD:-kanha_secure_password_123}@warehouse:5432/airflow_metadata
+    AIRFLOW__CORE__FERNET_KEY: ''
+    AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__WEBSERVER__SECRET_KEY: 'kanha_secret_key_fixed_123'
+    PYTHONPATH: '/opt/airflow'
+    _PIP_ADDITIONAL_REQUIREMENTS: 'dbt-core>=1.8.0 dbt-postgres>=1.8.0 python-dotenv requests'
+    SUPABASE_URL: ${SUPABASE_URL}
+    SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+    WAREHOUSE_HOST: warehouse
+    WAREHOUSE_PORT: 5432
+    WAREHOUSE_DB: ${WAREHOUSE_DB:-kanha_analytics}
+    WAREHOUSE_USER: ${WAREHOUSE_USER:-kanha_admin}
+    WAREHOUSE_PASSWORD: ${WAREHOUSE_PASSWORD:-kanha_secure_password_123}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./dbt_kanhasushi:/opt/airflow/dbt_kanhasushi
+    - ./scripts:/opt/airflow/scripts
+    - ./logs:/opt/airflow/logs
+    - ./requirements.txt:/opt/airflow/requirements.txt
+  user: "${AIRFLOW_UID:-50000}:0"
+
+services:
+  # 1. Analytical Data Warehouse (Postgres OLAP)
+  warehouse:
+    image: postgres:16-alpine
+    container_name: kanha_warehouse
+    environment:
+      POSTGRES_USER: ${WAREHOUSE_USER:-kanha_admin}
+      POSTGRES_PASSWORD: ${WAREHOUSE_PASSWORD:-kanha_secure_password_123}
+      POSTGRES_MULTIPLE_DATABASES: "airflow_metadata,${WAREHOUSE_DB:-kanha_analytics}"
+    ports:
+      - "5433:5432"
+    volumes:
+      - warehouse_data:/var/lib/postgresql/data
+      - ./scripts/init_warehouse.sql:/docker-entrypoint-initdb.d/init_warehouse.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WAREHOUSE_USER:-kanha_admin}"]
+      interval: 5s
+      retries: 5
+
+  # 2. Airflow DB Init
+  airflow-init:
+    <<: *airflow-common
+    container_name: kanha_airflow_init
+    command: version
+    environment:
+      <<: *airflow-common-env
+      _AIRFLOW_DB_MIGRATE: 'true'
+      _AIRFLOW_WWW_USER_CREATE: 'true'
+      _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
+      _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
+    depends_on:
+      warehouse:
+        condition: service_healthy
+
+  # 3. Airflow Webserver
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: kanha_airflow_webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    restart: always
+
+  # 4. Airflow Scheduler
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: kanha_airflow_scheduler
+    command: scheduler
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    restart: always
+
+  # 5. BI Visualization Dashboard (Metabase)
+  metabase:
+    image: metabase/metabase:latest
+    container_name: kanha_metabase
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db
+    volumes:
+      - metabase_data:/metabase-data
+    depends_on:
+      warehouse:
+        condition: service_healthy
+    restart: always
+
+volumes:
+  warehouse_data:
+  metabase_data:

@@ -1,0 +1,65 @@
+version: 2
+
+sources:
+  - name: raw
+    database: kanha_analytics
+    schema: raw
+    description: "Raw replica tables extracted incrementally from Supabase OLTP database."
+    tables:
+      - name: orders
+        description: "Customer dine-in orders per session."
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: table_id
+            tests:
+              - not_null
+      - name: order_items
+        description: "Individual food items inside an order."
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: order_id
+            tests:
+              - not_null
+          - name: price_at_order
+            tests:
+              - not_null
+      - name: order_item_options
+        description: "Custom options selected per order item (e.g. wasabi level, sauce)."
+      - name: payments
+        description: "Settled payments per table."
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+          - name: total_amount
+            tests:
+              - not_null
+      - name: payment_items
+        description: "Items recorded on the payment receipt."
+      - name: menu_items
+        description: "Master food menu items."
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+      - name: menu_item_variants
+        description: "Specific variants and prices for each menu item."
+        columns:
+          - name: id
+            tests:
+              - unique
+              - not_null
+      - name: categories
+        description: "Food categories."
+      - name: tables
+        description: "Dining tables in the restaurant."
+      - name: account
+        description: "Staff and administrator accounts."
