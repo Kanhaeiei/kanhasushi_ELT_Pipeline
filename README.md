@@ -91,3 +91,8 @@ This pipeline applies a **10:00 AM Bangkok Time (UTC+7)** cutoff:
 * Orders placed between `14:00` and `23:59` on Friday belong to **Friday**.
 * Orders placed between `00:00` and `09:59` on Saturday morning belong to **Friday's shift**.
 * Shift rollover occurs cleanly at **10:00 AM**.
+
+
+<img width="1850" height="978" alt="image" src="https://github.com/user-attachments/assets/d4b83b53-b302-4871-acba-843a51a4b6fd" />
+<img width="1844" height="969" alt="image" src="https://github.com/user-attachments/assets/1c404172-5afc-40f5-b1d6-3282b326e825" />
+
